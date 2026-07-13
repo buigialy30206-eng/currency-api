@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 app = FastAPI(title="Currency Converter API", version="1.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 async def health():
     return {"status": "ok"}
 
@@ -43,7 +43,7 @@ class ConversionResult(BaseModel):
     last_updated: Optional[str] = None
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 async def health():
     return {"status": "ok"}
 
