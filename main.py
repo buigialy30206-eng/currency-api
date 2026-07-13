@@ -4,34 +4,15 @@ Live exchange rates via open.er-api.com (free).
 """
 import subprocess, json as _json, time, threading
 from typing import Optional
-from fastapi import FastAPI, Depends, Query, HTTPException
+from fastapi import Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
-import time as _t, threading as _th
-_rl_win, _rl_max, _rl_hits, _rl_lk = 60, 60, {}, _th.Lock()
-
-async def _rate_limit(request):
-    from fastapi import Request, HTTPException
-    ip = (request.headers.get('X-Forwarded-For','') or request.headers.get('X-Real-IP','') or (request.client.host if request.client else '127.0.0.1')).split(',')[0].strip()
-    now = _t.time()
-    with _rl_lk:
-        e = _rl_hits.get(ip)
-        if e:
-            if now - e['s'] > _rl_win: e['s'], e['c'] = now, 1
-            else:
-                e['c'] += 1
-                if e['c'] > _rl_max: raise HTTPException(429, 'Too many requests')
-        else: _rl_hits[ip] = {'s': now, 'c': 1}
-    return True
 
 app = FastAPI(title="Currency Converter API", version="1.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-
 RATES_CACHE = {"ts": 0, "rates": {}}
 _cache_lock = threading.Lock()
-
 
 def fetch_rates():
     global RATES_CACHE
@@ -52,7 +33,6 @@ def fetch_rates():
         RATES_CACHE = {"ts": time.time(), "rates": rates}
     return rates
 
-
 class ConversionResult(BaseModel):
     from_currency: str
     to_currency: str
@@ -61,16 +41,13 @@ class ConversionResult(BaseModel):
     rate: float
     last_updated: Optional[str] = None
 
-
 @app.api_route("/health", methods=["GET", "HEAD"])
 async def health():
     return {"status": "ok"}
 
-
 @app.get("/")
 async def root():
     return {"service": "Currency Converter API", "version": "1.1.0"}
-
 
 @app.get("/convert", response_model=ConversionResult)
 async def convert(
@@ -99,7 +76,6 @@ async def convert(
         result=round(result, 4),
         rate=round(rate, 6),
     )
-
 
 @app.get("/rates")
 async def list_rates():
