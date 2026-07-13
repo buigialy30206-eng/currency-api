@@ -47,7 +47,7 @@ async def health():
 
 @app.get("/")
 async def root():
-    return {"service": "Currency Converter API", "version": "1.1.0"}
+    return {"service": "Currency Converter API", "version": "1.1.0", "related": ["Stock Price API", "EU VAT Validator API"]}
 
 @app.get("/convert", response_model=ConversionResult)
 async def convert(
